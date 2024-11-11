@@ -40,84 +40,162 @@ struct GoalTrackerApp: App {
 // 修改 StatusBarMenu 中的 sheet 展示方式
 struct StatusBarMenu: View {
     @ObservedObject var goalManager: GoalManager
-    @State private var newGoalTitle = ""
-    @State private var isAddingGoal = false
-    @State private var previewWindowController: NSWindowController?
-    
-    let backgroundColor = Color(NSColor(calibratedRed: 0.12, green: 0.12, blue: 0.12, alpha: 1.0))
-    let cardBackgroundColor = Color(NSColor(calibratedRed: 0.18, green: 0.18, blue: 0.18, alpha: 1.0))
-    
+        @State private var newGoalTitle = ""
+        @State private var isAddingGoal = false
+        @State private var previewWindowController: NSWindowController?
+        @State private var showingMenu = false
+        @State private var showingDonateView = false
+        
+        let backgroundColor = Color(NSColor(calibratedRed: 0.12, green: 0.12, blue: 0.12, alpha: 1.0))
+        
     var body: some View {
-        ZStack {
-            // 背景层
-            backgroundColor.edgesIgnoringSafeArea(.all)
-            
-            VStack(spacing: 8) {
-                Text("今日目标")
-                    .font(.headline)
-                    .padding(.top)
+            ZStack {
+                backgroundColor.edgesIgnoringSafeArea(.all)
                 
-                // 活跃度热力图
-                ActivityHeatmap(goals: goalManager.goals)
-                    .padding(.horizontal, 12)
-                
-                Divider()
-                
-                // 目标列表
-                ForEach(Array(goalManager.goals.enumerated()), id: \.element.id) { index, goal in
-                    GoalRow(goal: goal, goalManager: goalManager, colorTheme: GoalColor.forIndex(index))
-                }
-                
-                // 添加目标行
-                if isAddingGoal {
+                VStack(spacing: 16) {
+                    // 顶部标题栏
                     HStack {
-                        TextField("输入目标名称", text: $newGoalTitle)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .onSubmit {
-                                addGoal()
+                        Text("今日目标")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.white)
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            if let window = NSApplication.shared.windows.first(where: { $0.title == "菜单" }) {
+                                window.close()
                             }
-                        
-                        Button(action: addGoal) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.green)
+                            showPreviewWindow()
+                        }) {
+                            Image(systemName: "chart.bar.fill")
+                                .font(.system(size: 16))
+                                .foregroundColor(.white.opacity(0.8))
                         }
-                        .buttonStyle(PlainButtonStyle())
-                        .disabled(newGoalTitle.isEmpty)
-                        
-                        Button(action: cancelAddGoal) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.red)
-                        }
-                        .buttonStyle(PlainButtonStyle())
+                        .buttonStyle(.plain)
                     }
-                    .padding(.horizontal)
-                }
-                
-                Divider()
-                
-                HStack {
-                    Button(action: { isAddingGoal = true }) {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                            Text("添加目标")
-                        }
-                    }
-                    .disabled(isAddingGoal)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
                     
-                    Spacer()
+                    // 活跃度热力图
+                    ActivityHeatmap(goals: goalManager.goals)
+                        .padding(.horizontal, 12)
                     
-                    Button("查看统计") {
-                        showPreviewWindow()
+                    Divider()
+                    
+                    // 目标列表区域
+                    ScrollView {
+                        if goalManager.goals.isEmpty {
+                            VStack(spacing: 8) {
+                                Image(systemName: "flag.fill")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.gray)
+                                Text("还没有添加目标")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.gray)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 24)
+                        } else {
+                            LazyVStack(spacing: 8) {
+                                ForEach(Array(goalManager.goals.enumerated()), id: \.element.id) { index, goal in
+                                    GoalRow(goal: goal, goalManager: goalManager, colorTheme: GoalColor.forIndex(index))
+                                }
+                            }
+                            .padding(.horizontal, 12)
+                        }
                     }
+                    .frame(minHeight: 100, maxHeight: 300)
+                    
+                    // 添加目标状态
+                    if isAddingGoal {
+                        VStack(spacing: 8) {
+                            HStack {
+                                TextField("输入目标名称", text: $newGoalTitle)
+                                    .textFieldStyle(CustomTextFieldStyle())
+                                    .onSubmit { addGoal() }
+                                
+                                Button(action: addGoal) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
+                                        .font(.system(size: 18))
+                                }
+                                .buttonStyle(.plain)
+                                .disabled(newGoalTitle.isEmpty)
+                                
+                                Button(action: cancelAddGoal) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(.red)
+                                        .font(.system(size: 18))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(.horizontal, 12)
+                        }
+                        .padding(.vertical, 8)
+                    }
+                    
+                    // 底部按钮区
+                    HStack {
+                        if !isAddingGoal {
+                            Button(action: { isAddingGoal = true }) {
+                                HStack {
+                                    Image(systemName: "plus.circle.fill")
+                                    Text("添加新目标")
+                                }
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(Color.blue)
+                                .cornerRadius(8)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        
+                        Button(action: { showingMenu.toggle() }) {
+                            Image(systemName: "ellipsis.circle")
+                                .font(.system(size: 16))
+                                .foregroundColor(.white)
+                        }
+                        .buttonStyle(.plain)
+                        .popover(isPresented: $showingMenu, arrowEdge: .bottom) {
+                            VStack(spacing: 8) {
+                                Button(action: {
+                                    showingDonateView = true
+                                    showingMenu = false
+                                }) {
+                                    Label("请我喝咖啡", systemImage: "cup.and.saucer.fill")
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                
+                                Divider()
+                                
+                                Button(action: {
+                                    NSApplication.shared.terminate(nil)
+                                }) {
+                                    Label("退出应用", systemImage: "power")
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                            }
+                            .padding(4)
+                            .frame(width: 200)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 12)
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 8)
             }
-            .frame(width: 330)
+            .frame(width: 350, height: 700)
+            .popover(isPresented: $showingDonateView, arrowEdge: .bottom) {
+                DonateView()
+            }
         }
-                    .frame(width: 340)
-                            .preferredColorScheme(.dark)
-    }
     
     private func getRowColor(index: Int) -> Color {
         let colors: [Color] = [
@@ -172,6 +250,43 @@ struct StatusBarMenu: View {
         isAddingGoal = false
     }
 }
+
+struct CustomTextFieldStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .font(.system(size: 14))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color(.textBackgroundColor))
+            .cornerRadius(8)
+    }
+}
+
+struct DonateView: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("感谢您的支持！")
+                .font(.headline)
+            
+            Image("alipay-qr")
+                .resizable()
+                .interpolation(.none)
+                .scaledToFit()
+                .frame(width: 200, height: 300)
+                .background(Color.white)
+                .cornerRadius(8)
+                .shadow(radius: 2)
+            
+            Text("扫描上方二维码向我打赏")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .frame(width: 300, height: 400)
+    }
+}
+
+
 
 struct GoalColor {
     let start: Color
