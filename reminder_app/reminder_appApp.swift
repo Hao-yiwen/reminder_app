@@ -44,69 +44,79 @@ struct StatusBarMenu: View {
     @State private var isAddingGoal = false
     @State private var previewWindowController: NSWindowController?
     
+    let backgroundColor = Color(NSColor(calibratedRed: 0.12, green: 0.12, blue: 0.12, alpha: 1.0))
+    let cardBackgroundColor = Color(NSColor(calibratedRed: 0.18, green: 0.18, blue: 0.18, alpha: 1.0))
+    
     var body: some View {
-        VStack(spacing: 8) {
-            Text("今日目标")
-                .font(.headline)
-                .padding(.top)
+        ZStack {
+            // 背景层
+            backgroundColor.edgesIgnoringSafeArea(.all)
             
-            // 活跃度热力图
-            ActivityHeatmap(goals: goalManager.goals)
-                .padding(.horizontal, 12)
-            
-            Divider()
-            
-            // 目标列表
-            ForEach(Array(goalManager.goals.enumerated()), id: \.element.id) { index, goal in
-                            GoalRow(goal: goal, goalManager: goalManager, colorTheme: GoalColor.forIndex(index))
-                        }
-            
-            // 添加目标行
-            if isAddingGoal {
-                            HStack {
-                                TextField("输入目标名称", text: $newGoalTitle)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .onSubmit {
-                                        addGoal()
-                                    }
-                                
-                                Button(action: addGoal) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(.green)
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                .disabled(newGoalTitle.isEmpty)
-                                
-                                Button(action: cancelAddGoal) {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(.red)
-                                }
-                                .buttonStyle(PlainButtonStyle())
+            VStack(spacing: 8) {
+                Text("今日目标")
+                    .font(.headline)
+                    .padding(.top)
+                
+                // 活跃度热力图
+                ActivityHeatmap(goals: goalManager.goals)
+                    .padding(.horizontal, 12)
+                
+                Divider()
+                
+                // 目标列表
+                ForEach(Array(goalManager.goals.enumerated()), id: \.element.id) { index, goal in
+                    GoalRow(goal: goal, goalManager: goalManager, colorTheme: GoalColor.forIndex(index))
+                }
+                
+                // 添加目标行
+                if isAddingGoal {
+                    HStack {
+                        TextField("输入目标名称", text: $newGoalTitle)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .onSubmit {
+                                addGoal()
                             }
-                            .padding(.horizontal)
+                        
+                        Button(action: addGoal) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
                         }
-            
-            Divider()
-            
-            HStack {
-                            Button(action: { isAddingGoal = true }) {
-                                HStack {
-                                    Image(systemName: "plus.circle.fill")
-                                    Text("添加目标")
-                                }
-                            }
-                            .disabled(isAddingGoal)
-                            
-                            Spacer()
-                            
-                            Button("查看统计") {
-                                showPreviewWindow()
-                            }
+                        .buttonStyle(PlainButtonStyle())
+                        .disabled(newGoalTitle.isEmpty)
+                        
+                        Button(action: cancelAddGoal) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.red)
                         }
-                        .padding(.horizontal)
-                        .padding(.bottom, 8)
+                        .buttonStyle(PlainButtonStyle())
                     }
-                    .frame(width: 330)
+                    .padding(.horizontal)
+                }
+                
+                Divider()
+                
+                HStack {
+                    Button(action: { isAddingGoal = true }) {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                            Text("添加目标")
+                        }
+                    }
+                    .disabled(isAddingGoal)
+                    
+                    Spacer()
+                    
+                    Button("查看统计") {
+                        showPreviewWindow()
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 8)
+            }
+            .frame(width: 330)
+        }
+                    .frame(width: 340)
+                            .preferredColorScheme(.dark)
     }
     
     private func getRowColor(index: Int) -> Color {
