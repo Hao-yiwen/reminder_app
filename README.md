@@ -3,7 +3,7 @@
 ![macOS](https://img.shields.io/badge/macOS-13.0+-00979D?logo=apple&logoColor=white)
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-5.0+-0051C3?logo=swift&logoColor=white)
 
-口袋翻译，运行在 macOS 状态栏。
+轨迹，一个Macos 目标管理应用。
 
 ## 下载安装
 
