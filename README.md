@@ -68,7 +68,13 @@ macOS 13.0 或更高版本
 
 ## 预览
 
-<img src="preview/translator_detail.png" width="50%" style="display:inline-block;" />
+<img src="preview/track.png" width="30%" style="display:inline-block;" />
+
+<img src="preview/week_view.png" width="80%" style="display:inline-block;" />
+
+<img src="preview/month_view.png" width="80%" style="display:inline-block;" />
+
+<img src="preview/year_view.png" width="80%" style="display:inline-block;" />
 
 ## 支持我的工作
 
