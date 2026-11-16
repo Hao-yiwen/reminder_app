@@ -48,4 +48,34 @@ final class GoalPersistenceTests: XCTestCase {
         let result = GoalsPersistence.loadReplacingEmptyOnFailure(from: garbage)
         XCTAssertTrue(result.isEmpty)
     }
+
+    func testHistoricalPayloadWithIdRoundTripsWithoutChangingIdentity() throws {
+        // 与旧版合成 Codable + 默认 JSONEncoder 一致：UUID 字符串、日期为 Reference Date 秒数
+        let json = """
+        [{"id":"A1B2C3D4-E5F6-7890-ABCD-EF1234567890","title":"阅读","checkInDates":[700086400,700172800],"created":700000000}]
+        """.data(using: .utf8)!
+
+        let decoded = try GoalsPersistence.decode(from: json)
+        XCTAssertEqual(decoded.count, 1)
+        XCTAssertEqual(decoded[0].id.uuidString, "A1B2C3D4-E5F6-7890-ABCD-EF1234567890")
+        XCTAssertEqual(decoded[0].title, "阅读")
+        XCTAssertEqual(decoded[0].created.timeIntervalSinceReferenceDate, 700_000_000)
+        XCTAssertEqual(decoded[0].checkInDates.count, 2)
+
+        let reencoded = try GoalsPersistence.encode(decoded)
+        let again = try GoalsPersistence.decode(from: reencoded)
+        XCTAssertEqual(again, decoded)
+    }
+
+    func testLegacyPayloadWithoutIdGainsStableIdAfterSave() throws {
+        let json = """
+        [{"title":"早起","checkInDates":[],"created":700000000}]
+        """.data(using: .utf8)!
+
+        let decoded = try GoalsPersistence.decode(from: json)
+        let again = try GoalsPersistence.decode(from: GoalsPersistence.encode(decoded))
+        XCTAssertEqual(again, decoded)
+        XCTAssertEqual(again[0].title, "早起")
+        XCTAssertTrue(again[0].checkInDates.isEmpty)
+    }
 }

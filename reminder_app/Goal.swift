@@ -1,7 +1,7 @@
 import Foundation
 
 /// 目标数据模型（UserDefaults JSON 持久化）
-struct Goal: Identifiable, Codable, Equatable {
+struct Goal: Identifiable, Codable, Equatable, Sendable {
     let id: UUID
     var title: String
     var checkInDates: Set<Date>

@@ -26,6 +26,7 @@
 3. 在 Xcode 中选择 scheme `reminder_app`，目标设备选 **My Mac**。
 4. 如需真机签名，在 Signing & Capabilities 中选择你的 Development Team（或改为个人签名）。
 5. 按 `⌘R` 运行。应用为菜单栏应用（`LSUIElement = YES`），Dock 中通常不可见，请在状态栏查找星标图标。
+6. 共享 scheme 的 Run 动作为 **Release**（原工程如此）。需要断点调试时，把 scheme 的 Run 配置改为 Debug。
 
 ## 数据持久化与测试
 

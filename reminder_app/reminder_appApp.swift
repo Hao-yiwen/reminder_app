@@ -124,7 +124,7 @@ struct StatusBarMenu: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 8)
                                 .background(Color.blue)
-                                .cornerRadius(8)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
                             }
                             .buttonStyle(.plain)
                         }
@@ -188,7 +188,7 @@ struct StatusBarMenu: View {
         if let windowController = previewWindowController {
             windowController.showWindow(nil)
             windowController.window?.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
+            NSApp.activate()
             return
         }
 
@@ -205,7 +205,7 @@ struct StatusBarMenu: View {
         let windowController = NSWindowController(window: window)
         previewWindowController = windowController
         windowController.showWindow(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.activate()
     }
     
     private func addGoal() {
@@ -233,7 +233,7 @@ struct CustomTextFieldStyle: TextFieldStyle {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(Color(nsColor: .textBackgroundColor))
-            .cornerRadius(8)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
 
@@ -249,7 +249,7 @@ struct DonateView: View {
                 .scaledToFit()
                 .frame(width: 200, height: 300)
                 .background(Color(nsColor: .windowBackgroundColor))
-                .cornerRadius(8)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
                 .shadow(radius: 2)
             
             Text("扫描上方二维码向我打赏")
@@ -807,7 +807,7 @@ struct MonthView: View {
                                 }
                             }
                             .background(Color(nsColor: .separatorColor))
-                            .cornerRadius(12)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
                             .padding(.horizontal)
                             
                             Spacer()
@@ -1226,7 +1226,7 @@ struct EnhancedMonthSummaryCell: View {
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
                             .background(Color.blue)
-                            .cornerRadius(10)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                 }
                 
@@ -1442,11 +1442,11 @@ struct ActivityHeatmap: View {
                         .frame(width: 30)
                     
                     ZStack(alignment: .leading) {
-                        ForEach(monthLabels, id: \.0) { month, xOffset in
-                            Text(month)
+                        ForEach(Array(monthLabels.enumerated()), id: \.offset) { _, label in
+                            Text(label.0)
                                 .font(.system(size: 12))
                                 .foregroundStyle(.secondary)
-                                .position(x: xOffset + cellSize/2, y: 10)
+                                .position(x: label.1 + cellSize/2, y: 10)
                         }
                     }
                     .frame(height: 20)
@@ -1519,7 +1519,7 @@ struct ActivityHeatmap: View {
             }
             .padding()
             .background(Color(nsColor: .windowBackgroundColor))
-            .cornerRadius(12)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
 }
 
