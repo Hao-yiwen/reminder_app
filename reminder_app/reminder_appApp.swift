@@ -1,12 +1,32 @@
 import SwiftUI
-import UserNotifications
+import AppKit
 
 // 目标数据模型
 struct Goal: Identifiable, Codable {
-    let id = UUID()
+    let id: UUID
     var title: String
     var checkInDates: Set<Date>
     var created: Date
+
+    init(title: String, checkInDates: Set<Date>, created: Date, id: UUID = UUID()) {
+        self.id = id
+        self.title = title
+        self.checkInDates = checkInDates
+        self.created = created
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, checkInDates, created
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        // 兼容旧数据：若缺少 id 字段则生成新 UUID，避免整表解码失败
+        id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        title = try container.decode(String.self, forKey: .title)
+        checkInDates = try container.decode(Set<Date>.self, forKey: .checkInDates)
+        created = try container.decode(Date.self, forKey: .created)
+    }
     
     var consecutiveStreak: Int {
         // 计算连续打卡天数
@@ -50,7 +70,7 @@ struct StatusBarMenu: View {
         
     var body: some View {
             ZStack {
-                backgroundColor.edgesIgnoringSafeArea(.all)
+                backgroundColor.ignoresSafeArea()
                 
                 VStack(spacing: 16) {
                     // 顶部标题栏
@@ -257,7 +277,7 @@ struct CustomTextFieldStyle: TextFieldStyle {
             .font(.system(size: 14))
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(Color(.textBackgroundColor))
+            .background(Color(nsColor: .textBackgroundColor))
             .cornerRadius(8)
     }
 }
@@ -399,7 +419,7 @@ struct GoalRow: View {
                             .font(.system(size: 18))
                             .foregroundColor(isCheckedToday ? colorTheme.end : .gray)
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .buttonStyle(.plain)
                     
                     VStack(alignment: .leading, spacing: 4) {
                         Text(goal.title)
@@ -515,7 +535,7 @@ struct AddGoalView: View {
                 .font(.headline)
             
             TextField("目标名称", text: $title)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .textFieldStyle(.roundedBorder)
                 .frame(width: 200)
             
             HStack(spacing: 16) {
@@ -555,7 +575,7 @@ struct PreviewWindow: View {
                 Text("月视图").tag(1)
                 Text("年视图").tag(2)
             }
-            .pickerStyle(SegmentedPickerStyle())
+            .pickerStyle(.segmented)
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             
@@ -664,12 +684,12 @@ struct WeekView: View {
                     }
                 }
                 .padding(.vertical, 16)
-                .background(Color(.windowBackgroundColor))
+                .background(Color(nsColor: .windowBackgroundColor))
                 .contentShape(Rectangle())
                 .overlay(
                     Rectangle()
                         .frame(height: 1)
-                        .foregroundColor(Color(.separatorColor))
+                        .foregroundColor(Color(nsColor: .separatorColor))
                         .offset(y: 16),
                     alignment: .bottom
                 )
@@ -719,7 +739,7 @@ struct WeekView: View {
                 }
             }
             .padding(.vertical, 12)
-            .background(Color(.windowBackgroundColor).opacity(0.05))
+            .background(Color(nsColor: .windowBackgroundColor).opacity(0.05))
             
             Divider()
             
@@ -813,7 +833,7 @@ struct MonthView: View {
                            .font(.system(size: 14, weight: .medium))
                            .frame(maxWidth: .infinity)
                            .padding(.vertical, 8)
-                           .background(Color(.windowBackgroundColor))
+                           .background(Color(nsColor: .windowBackgroundColor))
                    }
                }
                 
@@ -823,13 +843,13 @@ struct MonthView: View {
                                         if let date = date {
                                             EnhancedDayCell(date: date, goals: goals)
                                         } else {
-                                            Color(.windowBackgroundColor)
+                                            Color(nsColor: .windowBackgroundColor)
                                                 .aspectRatio(1, contentMode: .fit)
                                         }
                                     }
                                 }
                             }
-                            .background(Color(.separatorColor))
+                            .background(Color(nsColor: .separatorColor))
                             .cornerRadius(12)
                             .padding(.horizontal)
                             
@@ -917,7 +937,7 @@ struct MonthStatCard: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.windowBackgroundColor))
+                .fill(Color(nsColor: .windowBackgroundColor))
                 .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
         )
     }
@@ -950,7 +970,7 @@ struct EnhancedDayCell: View {
             if goals.count > 0 {
                             ZStack {
                                 Circle()
-                                    .stroke(Color(.separatorColor), lineWidth: 2)
+                                    .stroke(Color(nsColor: .separatorColor), lineWidth: 2)
                                     .frame(width: 24, height: 24)
                                 
                                 Circle()
@@ -978,7 +998,7 @@ struct EnhancedDayCell: View {
                         if calendar.isDateInToday(date) {
                             Color.blue
                         } else {
-                            Color(.windowBackgroundColor)
+                            Color(nsColor: .windowBackgroundColor)
                         }
                     }
                 )
@@ -1064,7 +1084,7 @@ struct YearView: View {
                 .animation(.easeInOut, value: selectedYear)
             }
         }
-        .background(Color(.windowBackgroundColor))
+        .background(Color(nsColor: .windowBackgroundColor))
     }
     
     func calculateYearCompletionRate() -> Int {
@@ -1179,7 +1199,7 @@ struct YearStatCard: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.windowBackgroundColor))
+                .fill(Color(nsColor: .windowBackgroundColor))
                 .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
         )
     }
@@ -1258,7 +1278,7 @@ struct EnhancedMonthSummaryCell: View {
                 // 环形进度指示器
                 ZStack {
                     Circle()
-                                    .stroke(Color(.separatorColor), lineWidth: 3)
+                                    .stroke(Color(nsColor: .separatorColor), lineWidth: 3)
                                     .frame(width: 40, height: 40)
                     
                     Circle()
@@ -1299,7 +1319,7 @@ struct EnhancedMonthSummaryCell: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                            .fill(Color(.windowBackgroundColor))
+                            .fill(Color(nsColor: .windowBackgroundColor))
                             .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
         )
     }
@@ -1384,7 +1404,6 @@ struct ActivityHeatmap: View {
     
     // 网格数据计算保持不变...
     var weekGrid: [[Date?]] {
-        let totalDays = weeksToShow * 7
         var grid: [[Date?]] = Array(repeating: Array(repeating: nil, count: weeksToShow), count: 7)
         
         for (index, date) in dateRange.enumerated() {
@@ -1542,7 +1561,7 @@ struct ActivityHeatmap: View {
                 .padding(.top, 4)
             }
             .padding()
-            .background(Color(.windowBackgroundColor))
+            .background(Color(nsColor: .windowBackgroundColor))
             .cornerRadius(12)
         }
 }
@@ -1569,7 +1588,7 @@ struct HeatmapCell: View {
             .frame(width: cellSize, height: cellSize)
             .overlay(
                 RoundedRectangle(cornerRadius: 3)
-                    .stroke(Color(.separatorColor), lineWidth: 0.5)
+                    .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
             )
             .help(date != nil ? "\(formattedDate)\n完成进度: \(completedCount)/\(totalCount) (\(Int(activityRate * 100))%)" : "")
     }
