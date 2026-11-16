@@ -1,28 +1,5 @@
 import SwiftUI
-import UserNotifications
-
-// 目标数据模型
-struct Goal: Identifiable, Codable {
-    let id = UUID()
-    var title: String
-    var checkInDates: Set<Date>
-    var created: Date
-    
-    var consecutiveStreak: Int {
-        // 计算连续打卡天数
-        var count = 0
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        var currentDate = today
-        
-        while checkInDates.contains(calendar.startOfDay(for: currentDate)) {
-            count += 1
-            currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate)!
-        }
-        
-        return count
-    }
-}
+import AppKit
 
 // 主应用程序
 @main
@@ -50,14 +27,14 @@ struct StatusBarMenu: View {
         
     var body: some View {
             ZStack {
-                backgroundColor.edgesIgnoringSafeArea(.all)
+                backgroundColor.ignoresSafeArea()
                 
                 VStack(spacing: 16) {
                     // 顶部标题栏
                     HStack {
                         Text("今日目标")
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundStyle(.white)
                         
                         Spacer()
                         
@@ -69,7 +46,7 @@ struct StatusBarMenu: View {
                         }) {
                             Image(systemName: "chart.bar.fill")
                                 .font(.system(size: 16))
-                                .foregroundColor(.white.opacity(0.8))
+                                .foregroundStyle(.white.opacity(0.8))
                         }
                         .buttonStyle(.plain)
                     }
@@ -88,10 +65,10 @@ struct StatusBarMenu: View {
                             VStack(spacing: 8) {
                                 Image(systemName: "flag.fill")
                                     .font(.system(size: 24))
-                                    .foregroundColor(.gray)
+                                    .foregroundStyle(.gray)
                                 Text("还没有添加目标")
                                     .font(.system(size: 14))
-                                    .foregroundColor(.gray)
+                                    .foregroundStyle(.gray)
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 24)
@@ -116,7 +93,7 @@ struct StatusBarMenu: View {
                                 
                                 Button(action: addGoal) {
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(.green)
+                                        .foregroundStyle(.green)
                                         .font(.system(size: 18))
                                 }
                                 .buttonStyle(.plain)
@@ -124,7 +101,7 @@ struct StatusBarMenu: View {
                                 
                                 Button(action: cancelAddGoal) {
                                     Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(.red)
+                                        .foregroundStyle(.red)
                                         .font(.system(size: 18))
                                 }
                                 .buttonStyle(.plain)
@@ -143,11 +120,11 @@ struct StatusBarMenu: View {
                                     Text("添加新目标")
                                 }
                                 .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.white)
+                                .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 8)
                                 .background(Color.blue)
-                                .cornerRadius(8)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
                             }
                             .buttonStyle(.plain)
                         }
@@ -155,7 +132,7 @@ struct StatusBarMenu: View {
                         Button(action: { showingMenu.toggle() }) {
                             Image(systemName: "ellipsis.circle")
                                 .font(.system(size: 16))
-                                .foregroundColor(.white)
+                                .foregroundStyle(.white)
                         }
                         .buttonStyle(.plain)
                         .popover(isPresented: $showingMenu, arrowEdge: .bottom) {
@@ -208,30 +185,28 @@ struct StatusBarMenu: View {
     }
     
     private func showPreviewWindow() {
-           DispatchQueue.main.async {
-               if let windowController = previewWindowController {
-                   windowController.showWindow(nil)
-                   windowController.window?.makeKeyAndOrderFront(nil)
-                   NSApp.activate(ignoringOtherApps: true)
-               } else {
-                   let window = NSWindow(
-                       contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
-                       styleMask: [.titled, .closable, .miniaturizable, .resizable],
-                       backing: .buffered,
-                       defer: false
-                   )
-                   window.title = "统计预览"
-                   window.center()
-                   window.contentView = NSHostingView(rootView: PreviewWindow(goalManager: goalManager))
-                   
-                   let windowController = NSWindowController(window: window)
-                   previewWindowController = windowController
-                   
-                   windowController.showWindow(nil)
-                   NSApp.activate(ignoringOtherApps: true)
-               }
-           }
-       }
+        if let windowController = previewWindowController {
+            windowController.showWindow(nil)
+            windowController.window?.makeKeyAndOrderFront(nil)
+            NSApp.activate()
+            return
+        }
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "统计预览"
+        window.center()
+        window.contentView = NSHostingView(rootView: PreviewWindow(goalManager: goalManager))
+
+        let windowController = NSWindowController(window: window)
+        previewWindowController = windowController
+        windowController.showWindow(nil)
+        NSApp.activate()
+    }
     
     private func addGoal() {
         if !newGoalTitle.isEmpty {
@@ -257,8 +232,8 @@ struct CustomTextFieldStyle: TextFieldStyle {
             .font(.system(size: 14))
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(Color(.textBackgroundColor))
-            .cornerRadius(8)
+            .background(Color(nsColor: .textBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
 
@@ -273,13 +248,13 @@ struct DonateView: View {
                 .interpolation(.none)
                 .scaledToFit()
                 .frame(width: 200, height: 300)
-                .background(Color.white)
-                .cornerRadius(8)
+                .background(Color(nsColor: .windowBackgroundColor))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
                 .shadow(radius: 2)
             
             Text("扫描上方二维码向我打赏")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
         .padding()
         .frame(width: 300, height: 400)
@@ -397,9 +372,9 @@ struct GoalRow: View {
                     }) {
                         Image(systemName: isCheckedToday ? "checkmark.circle.fill" : "circle")
                             .font(.system(size: 18))
-                            .foregroundColor(isCheckedToday ? colorTheme.end : .gray)
+                            .foregroundStyle(isCheckedToday ? colorTheme.end : .gray)
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .buttonStyle(.plain)
                     
                     VStack(alignment: .leading, spacing: 4) {
                         Text(goal.title)
@@ -408,7 +383,7 @@ struct GoalRow: View {
                         if goal.consecutiveStreak > 0 {
                             Text("\(goal.consecutiveStreak) 天连续")
                                 .font(.system(size: 12))
-                                .foregroundColor(colorTheme.end.opacity(0.8))
+                                .foregroundStyle(colorTheme.end.opacity(0.8))
                         }
                     }
                 }
@@ -420,17 +395,17 @@ struct GoalRow: View {
                     Text("\(weekCheckInCount)")
                         .font(.system(size: 32, weight: .heavy, design: .rounded))
                         .italic()
-                        .foregroundColor(colorTheme.end.opacity(0.15))
+                        .foregroundStyle(colorTheme.end.opacity(0.15))
                         .offset(x: 2, y: 2) // 阴影效果
                     
                     Text("\(weekCheckInCount)")
                         .font(.system(size: 32, weight: .heavy, design: .rounded))
                         .italic()
-                        .foregroundColor(colorTheme.end)
+                        .foregroundStyle(colorTheme.end)
                         .overlay(
                             Text("本周")
                                 .font(.system(size: 10, weight: .medium))
-                                .foregroundColor(colorTheme.end.opacity(0.8))
+                                .foregroundStyle(colorTheme.end.opacity(0.8))
                                 .offset(y: -20)
                         )
                 }
@@ -453,7 +428,8 @@ struct GoalRow: View {
 }
 
 // 目标管理器
-class GoalManager: ObservableObject {
+@MainActor
+final class GoalManager: ObservableObject {
     @Published private(set) var goals: [Goal] = []
     
     init() {
@@ -489,17 +465,18 @@ class GoalManager: ObservableObject {
     }
     
     private func loadGoals() {
-        if let data = UserDefaults.standard.data(forKey: "goals") {
-            if let decoded = try? JSONDecoder().decode([Goal].self, from: data) {
-                goals = decoded
-            }
+        guard let data = UserDefaults.standard.data(forKey: GoalsPersistence.storageKey),
+              let decoded = try? GoalsPersistence.decode(from: data) else {
+            return
         }
+        goals = decoded
     }
     
     private func saveGoals() {
-        if let encoded = try? JSONEncoder().encode(goals) {
-            UserDefaults.standard.set(encoded, forKey: "goals")
+        guard let encoded = try? GoalsPersistence.encode(goals) else {
+            return
         }
+        UserDefaults.standard.set(encoded, forKey: GoalsPersistence.storageKey)
     }
 }
 
@@ -515,7 +492,7 @@ struct AddGoalView: View {
                 .font(.headline)
             
             TextField("目标名称", text: $title)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .textFieldStyle(.roundedBorder)
                 .frame(width: 200)
             
             HStack(spacing: 16) {
@@ -555,7 +532,7 @@ struct PreviewWindow: View {
                 Text("月视图").tag(1)
                 Text("年视图").tag(2)
             }
-            .pickerStyle(SegmentedPickerStyle())
+            .pickerStyle(.segmented)
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             
@@ -606,10 +583,10 @@ struct WeekView: View {
             VStack(spacing: 4) {
                 Text(formatWeekDay())
                     .font(.system(size: 12))
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                 Text(formatDate())
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(calendar.isDateInToday(date) ? .blue : .primary)
+                    .foregroundStyle(calendar.isDateInToday(date) ? .blue : .primary)
             }
             .frame(maxWidth: .infinity)
         }
@@ -648,7 +625,7 @@ struct WeekView: View {
                             .font(.system(size: 14))
                         Text("本周完成率: \(Int(completionRate * 100))%")
                             .font(.system(size: 12))
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                     .frame(width: 180, alignment: .leading)
                     .padding(.horizontal, 16)
@@ -664,12 +641,12 @@ struct WeekView: View {
                     }
                 }
                 .padding(.vertical, 16)
-                .background(Color(.windowBackgroundColor))
+                .background(Color(nsColor: .windowBackgroundColor))
                 .contentShape(Rectangle())
                 .overlay(
                     Rectangle()
                         .frame(height: 1)
-                        .foregroundColor(Color(.separatorColor))
+                        .foregroundStyle(Color(nsColor: .separatorColor))
                         .offset(y: 16),
                     alignment: .bottom
                 )
@@ -708,7 +685,7 @@ struct WeekView: View {
                     .frame(width: 180, alignment: .leading)
                     .padding(.horizontal, 16)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                 
                 ForEach(weekDates, id: \.self) { date in
                     DateHeaderCell(
@@ -719,7 +696,7 @@ struct WeekView: View {
                 }
             }
             .padding(.vertical, 12)
-            .background(Color(.windowBackgroundColor).opacity(0.05))
+            .background(Color(nsColor: .windowBackgroundColor).opacity(0.05))
             
             Divider()
             
@@ -759,7 +736,7 @@ struct MonthView: View {
             HStack {
                 Button(action: previousMonth) {
                     Image(systemName: "chevron.left")
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.blue)
                         .font(.system(size: 16, weight: .semibold))
                 }
                 .buttonStyle(.plain)
@@ -770,7 +747,7 @@ struct MonthView: View {
                 
                 Button(action: nextMonth) {
                     Image(systemName: "chevron.right")
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.blue)
                         .font(.system(size: 16, weight: .semibold))
                 }
                 .buttonStyle(.plain)
@@ -813,7 +790,7 @@ struct MonthView: View {
                            .font(.system(size: 14, weight: .medium))
                            .frame(maxWidth: .infinity)
                            .padding(.vertical, 8)
-                           .background(Color(.windowBackgroundColor))
+                           .background(Color(nsColor: .windowBackgroundColor))
                    }
                }
                 
@@ -823,14 +800,14 @@ struct MonthView: View {
                                         if let date = date {
                                             EnhancedDayCell(date: date, goals: goals)
                                         } else {
-                                            Color(.windowBackgroundColor)
+                                            Color(nsColor: .windowBackgroundColor)
                                                 .aspectRatio(1, contentMode: .fit)
                                         }
                                     }
                                 }
                             }
-                            .background(Color(.separatorColor))
-                            .cornerRadius(12)
+                            .background(Color(nsColor: .separatorColor))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
                             .padding(.horizontal)
                             
                             Spacer()
@@ -903,21 +880,21 @@ struct MonthStatCard: View {
             HStack {
                 Image(systemName: icon)
                     .font(.system(size: 16))
-                    .foregroundColor(color)
+                    .foregroundStyle(color)
                 Text(title)
                     .font(.system(size: 14))
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
             
             Text(value)
                 .font(.system(size: 24, weight: .bold))
-                .foregroundColor(.primary)
+                .foregroundStyle(.primary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.windowBackgroundColor))
+                .fill(Color(nsColor: .windowBackgroundColor))
                 .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
         )
     }
@@ -944,13 +921,13 @@ struct EnhancedDayCell: View {
             // 日期
             Text("\(calendar.component(.day, from: date))")
                 .font(.system(size: 14, weight: calendar.isDateInToday(date) ? .bold : .regular))
-                .foregroundColor(calendar.isDateInToday(date) ? .white : .primary)
+                .foregroundStyle(calendar.isDateInToday(date) ? .white : .primary)
             
             // 完成指示器
             if goals.count > 0 {
                             ZStack {
                                 Circle()
-                                    .stroke(Color(.separatorColor), lineWidth: 2)
+                                    .stroke(Color(nsColor: .separatorColor), lineWidth: 2)
                                     .frame(width: 24, height: 24)
                                 
                                 Circle()
@@ -965,7 +942,7 @@ struct EnhancedDayCell: View {
                                 if completedGoalsCount > 0 {
                                     Text("\(completedGoalsCount)")
                                         .font(.system(size: 10))
-                                        .foregroundColor(calendar.isDateInToday(date) ? .white : .primary)
+                                        .foregroundStyle(calendar.isDateInToday(date) ? .white : .primary)
                                 }
                             }
                         }
@@ -978,7 +955,7 @@ struct EnhancedDayCell: View {
                         if calendar.isDateInToday(date) {
                             Color.blue
                         } else {
-                            Color(.windowBackgroundColor)
+                            Color(nsColor: .windowBackgroundColor)
                         }
                     }
                 )
@@ -1005,7 +982,7 @@ struct YearView: View {
             HStack {
                 Button(action: { selectedYear -= 1 }) {
                     Image(systemName: "chevron.left")
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.blue)
                         .font(.system(size: 16, weight: .semibold))
                 }
                 .buttonStyle(.plain)
@@ -1016,7 +993,7 @@ struct YearView: View {
                 
                 Button(action: { selectedYear += 1 }) {
                     Image(systemName: "chevron.right")
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.blue)
                         .font(.system(size: 16, weight: .semibold))
                 }
                 .buttonStyle(.plain)
@@ -1064,7 +1041,7 @@ struct YearView: View {
                 .animation(.easeInOut, value: selectedYear)
             }
         }
-        .background(Color(.windowBackgroundColor))
+        .background(Color(nsColor: .windowBackgroundColor))
     }
     
     func calculateYearCompletionRate() -> Int {
@@ -1165,21 +1142,21 @@ struct YearStatCard: View {
             HStack {
                 Image(systemName: icon)
                     .font(.system(size: 16))
-                    .foregroundColor(color)
+                    .foregroundStyle(color)
                 Text(title)
                     .font(.system(size: 14))
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
             
             Text(value)
                 .font(.system(size: 24, weight: .bold))
-                .foregroundColor(.primary)
+                .foregroundStyle(.primary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.windowBackgroundColor))
+                .fill(Color(nsColor: .windowBackgroundColor))
                 .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
         )
     }
@@ -1245,11 +1222,11 @@ struct EnhancedMonthSummaryCell: View {
                     if isCurrentMonth {
                         Text("当前")
                             .font(.system(size: 12))
-                            .foregroundColor(.white)
+                            .foregroundStyle(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
                             .background(Color.blue)
-                            .cornerRadius(10)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                 }
                 
@@ -1258,7 +1235,7 @@ struct EnhancedMonthSummaryCell: View {
                 // 环形进度指示器
                 ZStack {
                     Circle()
-                                    .stroke(Color(.separatorColor), lineWidth: 3)
+                                    .stroke(Color(nsColor: .separatorColor), lineWidth: 3)
                                     .frame(width: 40, height: 40)
                     
                     Circle()
@@ -1299,7 +1276,7 @@ struct EnhancedMonthSummaryCell: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                            .fill(Color(.windowBackgroundColor))
+                            .fill(Color(nsColor: .windowBackgroundColor))
                             .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
         )
     }
@@ -1326,7 +1303,7 @@ struct StatItem: View {
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: icon)
-                .foregroundColor(color)
+                .foregroundStyle(color)
                 .font(.system(size: 12))
             
             Text(value)
@@ -1334,7 +1311,7 @@ struct StatItem: View {
             
             Text(label)
                 .font(.system(size: 12))
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
     }
 }
@@ -1384,7 +1361,6 @@ struct ActivityHeatmap: View {
     
     // 网格数据计算保持不变...
     var weekGrid: [[Date?]] {
-        let totalDays = weeksToShow * 7
         var grid: [[Date?]] = Array(repeating: Array(repeating: nil, count: weeksToShow), count: 7)
         
         for (index, date) in dateRange.enumerated() {
@@ -1437,7 +1413,7 @@ struct ActivityHeatmap: View {
                 HStack {
                     Text("活跃度")
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                     
                     Spacer()
                     
@@ -1456,7 +1432,7 @@ struct ActivityHeatmap: View {
                     } label: {
                         Image(systemName: "paintpalette")
                             .font(.system(size: 12))
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
                 
@@ -1466,11 +1442,11 @@ struct ActivityHeatmap: View {
                         .frame(width: 30)
                     
                     ZStack(alignment: .leading) {
-                        ForEach(monthLabels, id: \.0) { month, xOffset in
-                            Text(month)
+                        ForEach(Array(monthLabels.enumerated()), id: \.offset) { _, label in
+                            Text(label.0)
                                 .font(.system(size: 12))
-                                .foregroundColor(.secondary)
-                                .position(x: xOffset + cellSize/2, y: 10)
+                                .foregroundStyle(.secondary)
+                                .position(x: label.1 + cellSize/2, y: 10)
                         }
                     }
                     .frame(height: 20)
@@ -1482,7 +1458,7 @@ struct ActivityHeatmap: View {
                         ForEach(["日", "一", "二", "三", "四", "五", "六"], id: \.self) { day in
                             Text(day)
                                 .font(.system(size: 12))
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
                                 .frame(width: 30, height: cellSize)
                         }
                     }
@@ -1512,7 +1488,7 @@ struct ActivityHeatmap: View {
                 HStack(spacing: 8) {
                     Text("完成度：")
                         .font(.system(size: 12))
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                     
                     ForEach(0..<5) { index in
                         HeatmapCell(
@@ -1528,13 +1504,13 @@ struct ActivityHeatmap: View {
                     HStack(spacing: 4) {
                         Text("0%")
                             .font(.system(size: 12))
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                         Image(systemName: "arrow.right")
                             .font(.system(size: 12))
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                         Text("100%")
                             .font(.system(size: 12))
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                     
                     Spacer()
@@ -1542,8 +1518,8 @@ struct ActivityHeatmap: View {
                 .padding(.top, 4)
             }
             .padding()
-            .background(Color(.windowBackgroundColor))
-            .cornerRadius(12)
+            .background(Color(nsColor: .windowBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
 }
 
@@ -1569,7 +1545,7 @@ struct HeatmapCell: View {
             .frame(width: cellSize, height: cellSize)
             .overlay(
                 RoundedRectangle(cornerRadius: 3)
-                    .stroke(Color(.separatorColor), lineWidth: 0.5)
+                    .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
             )
             .help(date != nil ? "\(formattedDate)\n完成进度: \(completedCount)/\(totalCount) (\(Int(activityRate * 100))%)" : "")
     }

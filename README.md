@@ -1,9 +1,43 @@
 # 轨迹
 
-![macOS](https://img.shields.io/badge/macOS-13.0+-00979D?logo=apple&logoColor=white)
-![SwiftUI](https://img.shields.io/badge/SwiftUI-5.0+-0051C3?logo=swift&logoColor=white)
+![macOS](https://img.shields.io/badge/macOS-14.0+-00979D?logo=apple&logoColor=white)
+![Swift](https://img.shields.io/badge/Swift-5.0-FA7343?logo=swift&logoColor=white)
+![Xcode](https://img.shields.io/badge/Xcode-16.0+-147EFB?logo=xcode&logoColor=white)
 
-轨迹，一个Macos 目标管理应用。
+轨迹，一个 macOS 目标管理应用（菜单栏 / MenuBarExtra）。
+
+## 环境要求
+
+- macOS 14.0（Sonoma）或更高版本
+- Xcode 16.0 或更高版本（Swift 5 语言模式）
+- 无需 CocoaPods / SPM 第三方依赖（纯系统框架：SwiftUI + AppKit）
+
+## 本地运行（开发）
+
+1. 克隆仓库：
+   ```bash
+   git clone https://github.com/Hao-yiwen/reminder_app.git
+   cd reminder_app
+   ```
+2. 用 Xcode 打开工程：
+   ```bash
+   open reminder_app.xcodeproj
+   ```
+3. 在 Xcode 中选择 scheme `reminder_app`，目标设备选 **My Mac**。
+4. 如需真机签名，在 Signing & Capabilities 中选择你的 Development Team（或改为个人签名）。
+5. 按 `⌘R` 运行。应用为菜单栏应用（`LSUIElement = YES`），Dock 中通常不可见，请在状态栏查找星标图标。
+6. 共享 scheme 的 Run 动作为 **Release**（原工程如此）。需要断点调试时，把 scheme 的 Run 配置改为 Debug。
+
+## 数据持久化与测试
+
+- 目标数据保存在 `UserDefaults` 键 `goals`（JSON，`JSONEncoder` 默认日期编码）。
+- 仓库根目录提供 SwiftPM 测试，用于在 Linux / CI 验证 **Goal 解码兼容性与往返编码**（不依赖 AppKit）：
+
+```bash
+swift test
+```
+
+（Cloud Agent 环境可使用已下载的 Swift 6 工具链；本地 macOS 直接用系统 `swift test`。）
 
 ## 下载安装
 
@@ -62,9 +96,9 @@
 xattr -cr /Applications/reminder_app.app
 ```
 
-## 系统要求：
+## 系统要求
 
-macOS 13.0 或更高版本
+macOS 14.0 或更高版本
 
 ## 预览
 
