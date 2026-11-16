@@ -27,6 +27,17 @@
 4. 如需真机签名，在 Signing & Capabilities 中选择你的 Development Team（或改为个人签名）。
 5. 按 `⌘R` 运行。应用为菜单栏应用（`LSUIElement = YES`），Dock 中通常不可见，请在状态栏查找星标图标。
 
+## 数据持久化与测试
+
+- 目标数据保存在 `UserDefaults` 键 `goals`（JSON，`JSONEncoder` 默认日期编码）。
+- 仓库根目录提供 SwiftPM 测试，用于在 Linux / CI 验证 **Goal 解码兼容性与往返编码**（不依赖 AppKit）：
+
+```bash
+swift test
+```
+
+（Cloud Agent 环境可使用已下载的 Swift 6 工具链；本地 macOS 直接用系统 `swift test`。）
+
 ## 下载安装
 
 [下载最新版本](https://github.com/Hao-yiwen/reminder_app/releases/)

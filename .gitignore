@@ -1,0 +1,4 @@
+.build/
+.swift-toolchain/
+*.xcodeproj/**/xcuserdata/
+DerivedData/
